@@ -1,4 +1,6 @@
 aiogram~=2.14
 environs~=8.0.0
-asyncpg
-requests
+asyncpg~=0.30.0
+requests~=2.32.3
+qrcode
+aiohttp~=3.11.16

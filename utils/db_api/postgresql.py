@@ -5,6 +5,8 @@ from asyncpg import Connection
 from asyncpg.pool import Pool
 
 from data import config
+from data.config import DB_PORT
+
 
 class Database:
 
@@ -16,7 +18,8 @@ class Database:
             user=config.DB_USER,
             password=config.DB_PASS,
             host=config.DB_HOST,
-            database=config.DB_NAME
+            database=config.DB_NAME,
+            port=DB_PORT,
         )
 
     async def execute(self, command, *args,
@@ -40,11 +43,11 @@ class Database:
 
     async def create_table_users(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Users (
-        id SERIAL PRIMARY KEY,
-        full_name VARCHAR(255) NOT NULL,
-        username varchar(255) NULL,
-        telegram_id BIGINT NOT NULL UNIQUE 
+        CREATE TABLE IF NOT EXISTS users_telegram (
+            id SERIAL PRIMARY KEY,
+            full_name VARCHAR(255) NOT NULL,
+            username VARCHAR(255),
+            telegram_id BIGINT NOT NULL UNIQUE
         );
         """
         await self.execute(sql, execute=True)
@@ -52,69 +55,46 @@ class Database:
     @staticmethod
     def format_args(sql, parameters: dict):
         sql += " AND ".join([
-            f"{item} = ${num}" for num, item in enumerate(parameters.keys(),
-                                                          start=1)
+            f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)
         ])
         return sql, tuple(parameters.values())
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
+        sql = "INSERT INTO users_telegram (full_name, username, telegram_id) VALUES ($1, $2, $3) RETURNING *"
         return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT * FROM users_telegram"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
-        sql = "SELECT * FROM Users WHERE "
+        sql = "SELECT * FROM users_telegram WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
 
     async def count_users(self):
-        sql = "SELECT COUNT(*) FROM Users"
+        sql = "SELECT COUNT(*) FROM users_telegram"
         return await self.execute(sql, fetchval=True)
 
     async def update_user_username(self, username, telegram_id):
-        sql = "UPDATE Users SET username=$1 WHERE telegram_id=$2"
+        sql = "UPDATE users_telegram SET username = $1 WHERE telegram_id = $2"
         return await self.execute(sql, username, telegram_id, execute=True)
 
     async def delete_users(self):
-        await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
+        await self.execute("DELETE FROM users_telegram WHERE TRUE", execute=True)
 
     async def drop_users(self):
-        await self.execute("DROP TABLE Users", execute=True)
+        await self.execute("DROP TABLE users_telegram", execute=True)
 
-    async def create_table_channels(self):
-        sql = """
-        CREATE TABLE IF NOT EXISTS Channel (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            channel_id BIGINT NOT NULL UNIQUE,
-            channel_url VARCHAR(255) NOT NULL
-        );
-        """
-        await self.execute(sql, execute=True)
 
-    async def add_channel(self, name, channel_id, channel_url):
-        sql = "INSERT INTO Channel (name, channel_id, channel_url) VALUES ($1, $2, $3) RETURNING *"
-        return await self.execute(sql, name, channel_id, channel_url, fetchrow=True)
 
-    async def select_all_channels(self):
-        sql = "SELECT * FROM Channel"
-        return await self.execute(sql, fetch=True)
 
-    async def select_channel_by_id(self, channel_id):
-        sql = "SELECT * FROM Channel WHERE id = $1"
-        return await self.execute(sql, channel_id, fetchrow=True)
 
-    async def update_channel_name(self, channel_id, new_name):
-        sql = "UPDATE Channel SET name = $1 WHERE id = $2"
-        return await self.execute(sql, new_name, channel_id, execute=True)
+    async def get_agent(self, telegram_id):
+        sql = "SELECT * FROM users WHERE phone = $1"
+        return await self.execute(sql, telegram_id, fetchrow=True)
 
-    async def delete_channel(self, channel_id):
-        print(channel_id)
-        sql = "DELETE FROM Channel WHERE id = $1"
-        return await self.execute(sql, channel_id, execute=True)
+    async def get_agent_abuturients(self, agent_id):
+        sql = "SELECT * FROM abuturient WHERE agent_id = $1"
+        return await self.execute(sql, agent_id, fetch=True)
 
-    async def drop_channels(self):
-        await self.execute("DROP TABLE Channel", execute=True)
