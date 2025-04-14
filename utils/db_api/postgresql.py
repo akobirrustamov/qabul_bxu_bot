@@ -98,3 +98,4 @@ class Database:
         sql = "SELECT * FROM abuturient WHERE agent_id = $1"
         return await self.execute(sql, agent_id, fetch=True)
 
+
