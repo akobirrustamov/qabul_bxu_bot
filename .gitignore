@@ -1,0 +1,53 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Byte-compiled files
+*.pyc
+
+# Editor/IDE configs
+.vscode/
+.idea/
+
+# Environment variables / secrets
+.env
+*.env
+
+# Log and debug files
+*.log
+
+# Compiled C files
+*.so
+
+# Zip/backup/temp files
+*.zip
+*.bak
+*.tmp
+
+# Database (optional)
+*.sqlite3
+*.db
+
+# Application upload/output files
+files/
+public/
+
+# Pytest cache
+.pytest_cache/
+
+# Jupyter/IPython
+.ipynb_checkpoints/
+
+# Pycharm or JetBrains
+*.iml
+
